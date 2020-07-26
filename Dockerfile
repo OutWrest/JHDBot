@@ -19,4 +19,4 @@ COPY nginx.conf .
 
 EXPOSE 443
 
-ENTRYPOINT [ "../entrypoint.sh" ]
+ENTRYPOINT [ "./entrypoint.sh" ]
