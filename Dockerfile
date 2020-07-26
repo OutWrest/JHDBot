@@ -5,7 +5,7 @@ WORKDIR /etc/nginx/
 RUN apt update -y \
     && apt install -y certbot
 
-COPY nginx/renew /etc/periodic/weekly/renew
+COPY renew /etc/periodic/weekly/renew
 RUN chmod +x /etc/periodic/weekly/renew
 
 RUN mkdir /var/lib/certbot
@@ -19,4 +19,4 @@ COPY nginx.conf .
 
 EXPOSE 443
 
-ENTRYPOINT [ "./entrypoint.sh" ]
+ENTRYPOINT [ "/entrypoint.sh" ]
