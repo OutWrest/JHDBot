@@ -2,7 +2,8 @@ FROM nginx:latest
 
 WORKDIR /etc/nginx/
 
-RUN apk add --no-cache certbot
+RUN apt update -y \
+    && apt install -y certbot
 
 COPY nginx/renew /etc/periodic/weekly/renew
 RUN chmod +x /etc/periodic/weekly/renew
