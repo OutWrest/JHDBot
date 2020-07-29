@@ -14,9 +14,10 @@ class GeneralCog(commands.Cog):
     async def ping(self, ctx):
         role = discord.utils.get(ctx.author.roles, name='Veteran')
         cool_people = discord.utils.get(ctx.author.roles, name='Moderator Emeritus')
-        if (str(
-                ctx.message.channel) == "bot-commands" or role is not None or cool_people is not None
+
+        if (str(ctx.message.channel) == "bot-commands" or role or cool_people
                 or ctx.message.author.guild_permissions.manage_messages):
+
             await ctx.send(f'Ping - {round(self.bot.latency * 1000)}ms')
         else:
             await ctx.send('Please use this command in `#bot-commands`')
@@ -26,8 +27,8 @@ class GeneralCog(commands.Cog):
     async def solve(self, ctx, *, input=None):
         role = discord.utils.get(ctx.author.roles, name='Veteran')
         cool_people = discord.utils.get(ctx.author.roles, name='Moderator Emeritus')
-        if (str(
-                ctx.message.channel) == "bot-commands" or role is not None or cool_people is not None
+
+        if (str(ctx.message.channel) == "bot-commands" or role or cool_people
                 or ctx.message.author.guild_permissions.manage_messages):
             await ctx.send("That is a definite maybe")
         else:
@@ -37,8 +38,7 @@ class GeneralCog(commands.Cog):
     @commands.command(aliases=['reportbot'])
     async def report_bot(self, ctx, *, reason=None):
         coolpeople = discord.utils.get(ctx.author.roles, name="Moderator Emeritus")
-        if (str(
-                ctx.message.channel) == "bot-commands" or coolpeople != None or ctx.message.author.guild_permissions.manage_messages):
+        if (str(ctx.message.channel) == "bot-commands" or coolpeople or ctx.message.author.guild_permissions.manage_messages):
             if reason == None:
                 await ctx.send("Invalid syntax, please add the issue you are facing.")
             else:

@@ -6,26 +6,32 @@ import sys
 import os
 import random
 import helpembed
-#import configfile
 
+#import configfile
 load_dotenv()
 
-bot = commands.Bot(command_prefix=str(os.environ.get('command_prefix')), case_insensitive=True)  # bot command prefix
+bot = commands.Bot(
+    command_prefix=str(os.environ.get('command_prefix')), 
+    case_insensitive=True
+)
+
 bot.remove_command('help')
+
 # Loading Cogs
 
 extensions = ['moderation', 'veteran', 'general', 'verification']
 
 if __name__ == '__main__':
-    sys.path.insert(1, os.getcwd() + '/cogs/')
     for extension in extensions:
         try:
-            bot.load_extension(extension)
+            bot.load_extension(f"cogs.{extension}")
         except Exception as e:
             print(f'Failed to load cogs : {e}')
 
 
-# EVENTS
+# ==========================
+# ==========EVENTS==========
+# ==========================
 
 # Event: when bot becomes ready.
 @bot.event  # event/function decorators
@@ -35,14 +41,16 @@ async def on_ready():
 
 # Event: when any member joins the server
 @bot.event
-async def on_member_join(member):  # a function which works when any member joins,need param `member`
+async def on_member_join(member):  # a function which works when any member joins, need param `member`
     print(f'{member} has joined the server :)')
     if str(member.name) == 'username123':
-        channel = discord.utils.get(member.guild.channels, name='moderators')
-        await channel.send(f'Warning : {member.mention} arrived in the server!')
-        channel2 = discord.utils.get(member.guild.channels, name="veteran-chat")
-        await channel2.send(f'Warning : {member.mention} arrived in the server!')
-    channel = discord.utils.get(member.guild.channels, name='welcome')
+
+        channels = ["moderators", "veteran-chat"]
+
+        [await discord.utils.get(member.guild.channels, name=channel)\
+            .send(f'Warning : {member.mention} arrived in the server!')\
+                for channel in channels]
+
     rules_channel = discord.utils.get(member.guild.channels, name='obligatory-rules')
     await channel.send(
         f'***Hi there, {member.mention} Welcome to JHDiscord!***\n\nTo gain access to the rest of the server. please '
@@ -59,10 +67,9 @@ async def on_member_join(member):  # a function which works when any member join
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
-        await ctx.send('Invalid command. Please use `$help` to know list current valid commands.')
+        await ctx.send(f'Invalid command. Please use `{bot.command_prefix}help` to know list current valid commands.')
     else:
-        await ctx.send(
-            f'An error occurred. Please use `{bot.command_prefix}reportbot <Error>`')
+        await ctx.send(f'An error occurred. Please use `{bot.command_prefix}reportbot <Error>`')
 
 
 @bot.event
@@ -73,10 +80,12 @@ async def on_message(message):
                 fa.write("## " + str(message.author.name) + "\n")
                 fa.write("Message : " + str(message.content) + "\n\n")
                 fa.write("-----\n")
-    else:
-        await bot.process_commands(message)
-        return
     await bot.process_commands(message)
+
+
+# ==========================
+# =========COMMANDS=========
+# ==========================
 
 
 # JHDbot help message
@@ -84,22 +93,21 @@ async def on_message(message):
 async def _help(ctx, helprole=None):  # role-vise help section
     role = discord.utils.get(ctx.author.roles, name='Veteran')
     cool_people = discord.utils.get(ctx.author.roles, name='Moderator Emeritus')
-    if (str(
-            ctx.message.channel) == 'bot-commands' or role is not None or cool_people is not None
+
+    if (str(ctx.message.channel) == 'bot-commands' or role or cool_people
             or ctx.message.author.guild_permissions.manage_messages):
-        help_roles = ['Veteran', 'veteran', 'Moderator', 'moderator']
-        if helprole in help_roles:
-            if helprole == 'Veteran' or helprole == 'veteran':
-                emb = discord.Embed(description=helpembed.veteranhelplist, colour=0xff002a)
-            elif helprole == 'Moderator' or helprole == 'moderator':
-                emb = discord.Embed(description=helpembed.moderator_help_list, colour=0xff002a)
-            await attach_embed_info(ctx, emb)
-            await ctx.send(embed=emb)
+            
+        if helprole and helprole.lower() == 'veteran':
+            emb = discord.Embed(description=helpembed.veteranhelplist, colour=0xff002a)
+        elif helprole and helprole.lower() == 'moderator':
+            emb = discord.Embed(description=helpembed.moderator_help_list, colour=0xff002a)
         else:
             emb = discord.Embed(title='John Hammond Discord', url='https://www.youtube.com/user/RootOfTheNull',
-                                description=helpembed.memberhelplist, color=0xff002a)
-            await attach_embed_info(ctx, emb)
-            await ctx.send(embed=emb)
+                description=helpembed.memberhelplist, color=0xff002a)
+
+        await attach_embed_info(ctx, emb)
+        await ctx.send(embed=emb)
+
     else:
         await ctx.send('Please use this command in `#bot-commands`')
 
@@ -109,10 +117,12 @@ async def _help(ctx, helprole=None):  # role-vise help section
 async def faq(ctx):
     role = discord.utils.get(ctx.author.roles, name='Veteran')
     coolpeople = discord.utils.get(ctx.author.roles, name='Moderator Emeritus')
-    if (str(
-            ctx.message.channel) == 'bot-commands' or role is not None or coolpeople is not None
+
+    if (str(ctx.message.channel) == 'bot-commands' or role or coolpeople
             or ctx.message.author.guild_permissions.manage_messages):
+
         emb = discord.Embed(description=helpembed.faq, colour=0xff002a)
+
         await attach_embed_info(ctx, emb)
         await ctx.send(embed=emb)
     else:
@@ -124,18 +134,26 @@ async def faq(ctx):
 async def channel_desc(ctx):
     role = discord.utils.get(ctx.author.roles, name='Veteran')
     coolpeople = discord.utils.get(ctx.author.roles, name='Moderator Emeritus')
-    if (str(
-            ctx.message.channel) == 'bot-commands' or role is not None or coolpeople is not None
+
+    if (str(ctx.message.channel) == 'bot-commands' or role or coolpeople
             or ctx.message.author.guild_permissions.manage_messages):
 
         emb = discord.Embed(description=helpembed.channels, colour=0xff002a)
+
         await attach_embed_info(ctx, emb)
         await ctx.message.author.send(embed=emb)
+
         emb = discord.Embed(description=helpembed.channels2, colour=0xff002a)
+        
         await attach_embed_info(ctx, emb)
         await ctx.message.author.send(embed=emb)
     else:
         await ctx.send('Please use this command in `#bot-commands`')
+
+
+# ==========================
+# ========FUNCTIONS=========
+# ==========================
 
 
 async def attach_embed_info(ctx=None, embed=None):
@@ -145,5 +163,4 @@ async def attach_embed_info(ctx=None, embed=None):
     return embed
 
 # Token
-bot.run(str(os.environ.get('bot_token')))  # token
-#bot.run(configfile.bot_token)
+bot.run(str(os.environ.get('bot_token')))
